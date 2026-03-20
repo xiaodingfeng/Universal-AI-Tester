@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI API Tester</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+<title>Universal-AI-Tester</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
 <style>
 html,body,div,span,input,textarea,button,select,p,h1,h2,h3,ul,li,table,th,td,hr,pre,code,a{box-sizing:border-box;margin:0;padding:0}
@@ -242,7 +243,7 @@ input[type=checkbox]{accent-color:#007aff;width:14px;height:14px;cursor:pointer}
 
 <div class="hdr">
   <div class="hdr-logo">⚡</div>
-  <div class="hdr-title">AI API Tester</div>
+  <div class="hdr-title">Universal-AI-Tester</div>
   <div class="mode-pills">
     <button class="mpill on" onclick="setMode('chat')">💬 对话</button>
     <button class="mpill" onclick="setMode('image')">🎨 文生图</button>
@@ -362,7 +363,7 @@ input[type=checkbox]{accent-color:#007aff;width:14px;height:14px;cursor:pointer}
     <div class="chat" id="chat">
       <div class="empty" id="empty">
         <div class="elogo">✦</div>
-        <h2>AI API Tester</h2>
+        <h2>Universal-AI-Tester</h2>
         <p>对话 · 文生图 · 文生视频<br>配置左侧平台，开始使用</p>
       </div>
     </div>
@@ -1214,7 +1215,7 @@ function clearArea(silent){
     msgs=[];totalTok=0;
     G('tokInfo').textContent='0 tokens';G('timeInfo').textContent='';
     G('cpill').className='cpill';G('ctxt').textContent='未连接';
-    G('chat').innerHTML=`<div class="empty" id="empty"><div class="elogo">✦</div><h2>AI API Tester</h2><p>对话 · 文生图 · 文生视频<br>配置左侧平台，开始使用</p></div>`;
+    G('chat').innerHTML=`<div class="empty" id="empty"><div class="elogo">✦</div><h2>Universal-AI-Tester</h2><p>对话 · 文生图 · 文生视频<br>配置左侧平台，开始使用</p></div>`;
     if(!silent)toast('对话已清空');
   }else if(curMode==='image'){
     imgHistory=[];G('chat').innerHTML=`<div class="empty" id="empty"><div class="elogo">✦</div><h2>文生图</h2><p>在左侧配置平台，填写提示词生成图像</p></div>`;
