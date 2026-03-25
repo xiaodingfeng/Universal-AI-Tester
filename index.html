@@ -139,6 +139,15 @@ input[type=checkbox]{accent-color:#007aff;width:14px;height:14px;cursor:pointer}
 .bbl pre{background:#f6f8fa;border:1px solid #e5e5ea;border-radius:8px;padding:12px;overflow-x:auto;margin:.5em 0}
 .bbl pre code{background:none;padding:0;color:#1c1c1e;font-size:.84em}
 .bbl blockquote{border-left:3px solid #007aff;padding-left:12px;color:#636366;margin:.5em 0}
+.think-box{background:#f9f6ff;border:1px solid rgba(88,86,214,.18);border-radius:12px;margin-bottom:10px;overflow:hidden;font-size:13px}
+.think-hd{display:flex;align-items:center;gap:7px;padding:8px 13px;cursor:pointer;user-select:none;color:#5856d6;font-weight:600}
+.think-hd .think-ic{font-size:15px;animation:thinkPulse 1.4s infinite}
+@keyframes thinkPulse{0%,100%{opacity:.4}50%{opacity:1}}
+.think-hd.done .think-ic{animation:none;opacity:1}
+.think-hd .think-arr{margin-left:auto;font-size:11px;transition:transform .2s;color:#aeaeb2}
+.think-hd.open .think-arr{transform:rotate(180deg)}
+.think-body{display:none;padding:0 13px 11px;color:#636366;line-height:1.7;white-space:pre-wrap;word-break:break-word;max-height:340px;overflow-y:auto;border-top:1px solid rgba(88,86,214,.1)}
+.think-body.open{display:block}
 .bbl table{border-collapse:collapse;width:100%;margin:.5em 0;font-size:.9em}
 .bbl th,.bbl td{border:1px solid #e5e5ea;padding:5px 9px;text-align:left}
 .bbl th{background:#f5f5f7;font-weight:700}
@@ -328,11 +337,11 @@ input[type=checkbox]{accent-color:#007aff;width:14px;height:14px;cursor:pointer}
     <div class="tpane hidden" id="tp-params">
       <div class="rrow">
         <div class="rg"><div class="rghd"><span class="rglbl">Temperature</span><span class="rgval" id="tv">0.7</span></div><input type="range" id="temp" min="0" max="2" step="0.1" value="0.7" oninput="document.getElementById('tv').textContent=parseFloat(this.value).toFixed(1)"></div>
-        <div class="rg"><div class="rghd"><span class="rglbl">Max Tokens</span><span class="rgval" id="tkv">2048</span></div><input type="range" id="maxTok" min="64" max="32768" step="64" value="2048" oninput="document.getElementById('tkv').textContent=this.value"></div>
+        <div class="rg"><div class="rghd"><span class="rglbl">Max Tokens</span><span class="rgval" id="tkv">20480</span></div><input type="range" id="maxTok" min="64" max="32768" step="64" value="20480" oninput="document.getElementById('tkv').textContent=this.value"></div>
       </div>
-      <div class="rg"><div class="rghd"><span class="rglbl">打字机速度</span><span class="rgval" id="twv">8</span> ms</div><input type="range" id="twspeed" min="0" max="40" step="1" value="8" oninput="document.getElementById('twv').textContent=this.value"></div>
+
       <div class="ig"><div class="ilbl">System Prompt（对话模式）</div><textarea class="inp" id="sysPmt" rows="4" placeholder="你是一个有帮助的助手…"></textarea></div>
-      <div class="trow"><span class="tlbl">Markdown 渲染</span><input type="checkbox" id="mdOn" checked></div>
+
       <hr class="divl">
       <div class="shd">费用估算（每 1M tokens）</div>
       <div class="calcbox">
@@ -668,7 +677,7 @@ function loadHistEntry(id){
     selProv(x.provider);
     G('modelInp').value=x.model||'';
     G('empty')?.remove();
-    msgs.forEach(m=>{if(m.role==='user')appendUser(m.content,[]);else appendAI(m.content,'历史记录',0,false)});
+    msgs.forEach(m=>{if(m.role==='user')appendUser(m.content,[]);else appendAI(m.content,'历史记录',0,true)});
   }else if(x.type==='image'){
     setMode('image');
     // restore img history up to and including this entry
@@ -785,39 +794,97 @@ function fixMsgs(raw){
   return out;
 }
 
-/* ═══════════════ CHAT API ═══════════════ */
-async function callOpenAI(key,url,model,raw,sys,maxT,temp,hdrs,sig){
+/* ═══════════════ CHAT API (流式 SSE) ═══════════════ */
+
+// 通用 SSE 读取器（兼容 \r\n 和 \n，收到数据立即处理）
+async function readSSE(res, onChunk){
+  const reader=res.body.getReader();
+  const dec=new TextDecoder();
+  let buf='';
+  while(true){
+    const{done,value}=await reader.read();
+    if(done){
+      // 处理最后可能残留的数据
+      if(buf.trim()){
+        for(const line of buf.split(/\r?\n/)){
+          if(!line.startsWith('data:'))continue;
+          const raw=line.slice(5).trim();
+          if(raw==='[DONE]')continue;
+          try{onChunk(JSON.parse(raw))}catch{}
+        }
+      }
+      break;
+    }
+    buf+=dec.decode(value,{stream:true});
+    // 按 \r\n 或 \n 切割，兼容不同服务端格式
+    const parts=buf.split(/\r?\n/);
+    buf=parts.pop(); // 最后一个可能不完整
+    for(const line of parts){
+      if(!line.startsWith('data:'))continue;
+      const raw=line.slice(5).trim();
+      if(raw==='[DONE]')continue;
+      try{onChunk(JSON.parse(raw))}catch{}
+    }
+  }
+}
+
+async function callOpenAIStream(key,url,model,raw,sys,maxT,temp,hdrs,sig,onToken,onMeta){
   const messages=fixMsgs(raw).map(m=>{
     if(m.images&&m.images.length)return{role:m.role,content:[{type:'text',text:m.content},...m.images.map(img=>({type:'image_url',image_url:{url:img}}))]};
     return{role:m.role,content:m.content};
   });
   if(sys?.trim())messages.unshift({role:'system',content:sys.trim()});
-  const res=await fetch(`${url}/chat/completions`,{method:'POST',headers:{'Content-Type':'application/json',...hdrs},body:JSON.stringify({model,messages,max_tokens:maxT,temperature:temp}),signal:sig});
-  const d=await res.json();
-  if(!res.ok)throw new Error(d.error?.message||JSON.stringify(d));
-  return{content:d.choices?.[0]?.message?.content||'',tokens:d.usage?.total_tokens,meta:`${d.model||model} · ${d.usage?.total_tokens||'?'} tokens`};
+  const res=await fetch(`${url}/chat/completions`,{method:'POST',headers:{'Content-Type':'application/json',...hdrs},body:JSON.stringify({model,messages,max_tokens:maxT,temperature:temp,stream:true}),signal:sig});
+  if(!res.ok){const d=await res.json();throw new Error(d.error?.message||JSON.stringify(d));}
+  let full='',totalTk=0,resModel=model;
+  await readSSE(res,chunk=>{
+    const delta=chunk.choices?.[0]?.delta||{};
+    const rc=delta.reasoning_content||delta.reasoning||'';
+    const tc=delta.content||'';
+    if(rc)onToken('',rc);
+    if(tc){full+=tc;onToken(tc,'');}
+    if(chunk.model)resModel=chunk.model;
+    if(chunk.usage?.total_tokens)totalTk=chunk.usage.total_tokens;
+  });
+  onMeta({content:full,tokens:totalTk,meta:`${resModel} · ${totalTk||'?'} tokens`});
 }
-async function callAnthropic(key,url,model,raw,sys,maxT,temp,sig){
+
+async function callAnthropicStream(key,url,model,raw,sys,maxT,temp,sig,onToken,onMeta){
   const messages=fixMsgs(raw).map(m=>{
     if(m.images&&m.images.length)return{role:m.role,content:[...m.images.map(img=>({type:'image',source:{type:'base64',media_type:'image/jpeg',data:img.split(',')[1]}})),{type:'text',text:m.content}]};
     return{role:m.role,content:m.content};
   });
-  const body={model,max_tokens:maxT,temperature:temp,messages};
+  const body={model,max_tokens:maxT,temperature:temp,messages,stream:true};
   if(sys?.trim())body.system=sys.trim();
   const res=await fetch(`${url}/messages`,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},body:JSON.stringify(body),signal:sig});
-  const d=await res.json();
-  if(!res.ok)throw new Error(d.error?.message||JSON.stringify(d));
-  return{content:d.content?.map(c=>c.text||'').join('')||'',tokens:(d.usage?.input_tokens||0)+(d.usage?.output_tokens||0),meta:`${d.model} · in:${d.usage?.input_tokens} out:${d.usage?.output_tokens}`};
+  if(!res.ok){const d=await res.json();throw new Error(d.error?.message||JSON.stringify(d));}
+  let full='',inTok=0,outTok=0,resModel=model;
+  await readSSE(res,chunk=>{
+    if(chunk.type==='content_block_delta'){
+      if(chunk.delta?.type==='thinking_delta'){const t=chunk.delta?.thinking||'';if(t)onToken('',t);}
+      else{const t=chunk.delta?.text||'';if(t){full+=t;onToken(t,'');}}
+    }
+    if(chunk.type==='message_start'){resModel=chunk.message?.model||model;inTok=chunk.message?.usage?.input_tokens||0;}
+    if(chunk.type==='message_delta'){outTok=chunk.usage?.output_tokens||0;}
+  });
+  onMeta({content:full,tokens:inTok+outTok,meta:`${resModel} · in:${inTok} out:${outTok}`});
 }
-async function callGemini(key,url,model,raw,sys,maxT,temp,sig){
+
+async function callGeminiStream(key,url,model,raw,sys,maxT,temp,sig,onToken,onMeta){
   const contents=fixMsgs(raw).map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
   const body={contents,generationConfig:{temperature:temp,maxOutputTokens:maxT}};
   if(sys?.trim())body.systemInstruction={parts:[{text:sys.trim()}]};
-  const res=await fetch(`${url}/models/${model}:generateContent?key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:sig});
-  const d=await res.json();
-  if(!res.ok)throw new Error(d.error?.message||JSON.stringify(d));
-  return{content:d.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'',meta:model};
+  const res=await fetch(`${url}/models/${model}:streamGenerateContent?alt=sse&key=${key}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:sig});
+  if(!res.ok){const d=await res.json();throw new Error(d.error?.message||JSON.stringify(d));}
+  let full='',totalTk=0;
+  await readSSE(res,chunk=>{
+    const t=chunk.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+    if(t){full+=t;onToken(t);}
+    if(chunk.usageMetadata?.totalTokenCount)totalTk=chunk.usageMetadata.totalTokenCount;
+  });
+  onMeta({content:full,tokens:totalTk,meta:`${model} · ${totalTk||'?'} tokens`});
 }
+
 
 /* ═══════════════ STOP ═══════════════ */
 function stopRequest(){
@@ -834,7 +901,31 @@ function setStopVisible(v){
   if(sg)sg.style.display=v?'':'none';
 }
 
-/* ═══════════════ SEND CHAT ═══════════════ */
+/* ═══════════════ SEND CHAT (流式) ═══════════════ */
+
+// 创建 AI 消息气泡（流式版，返回 bbl 元素）
+function appendAIStream(meta){
+  const c=G('chat');const d=document.createElement('div');d.className='msg assistant';
+  const bid='b'+(++ldc);const tid='t'+bid;
+  d.innerHTML=`<div class="av">AI</div><div class="mbody">
+    <div class="think-box" id="${tid}" style="display:none">
+      <div class="think-hd" onclick="toggleThink('${tid}')" id="th${tid}">
+        <span class="think-ic">🧠</span><span id="tl${tid}">思考中…</span><span class="think-arr">▼</span>
+      </div>
+      <div class="think-body open" id="tb${tid}"></div>
+    </div>
+    <div class="bbl" id="${bid}"></div>
+    <div class="macts"><button class="abt" onclick="cpBbl(this)">复制回复</button></div>
+    <div class="meta"><span class="bdg ok">✓</span><span id="m${bid}">${esc(meta||'')}</span></div>
+  </div>`;
+  c.appendChild(d);scrollBot();
+  return {bid,tid};
+}
+function toggleThink(tid){
+  const hd=G('th'+tid),bd=G('tb'+tid);
+  hd.classList.toggle('open');bd.classList.toggle('open');
+}
+
 async function sendMsg(retry){
   if(sending)return;
   const text=(retry||G('msgInp').value).trim();
@@ -845,8 +936,6 @@ async function sendMsg(retry){
   const temp=parseFloat(G('temp').value);
   const maxT=parseInt(G('maxTok').value);
   const sys=G('sysPmt').value;
-  const spd=parseInt(G('twspeed').value);
-  const md=G('mdOn').checked;
   if(!key&&curP!=='custom'){toast('⚠️ 请填写 API Key');return}
   if(!model){toast('⚠️ 请选择模型');return}
   sending=true;lastRetry=text;
@@ -862,20 +951,64 @@ async function sendMsg(retry){
   visFIles=[];renderVis();
   const lid=appendLoad();const t0=Date.now();
   try{
-    const pp=PROVIDERS[curP];let res;
+    const pp=PROVIDERS[curP];
     const sig=abortCtrl.signal;
-    if(pp.sp==='anthropic')res=await callAnthropic(key,url,model,msgs,sys,maxT,temp,sig);
-    else if(pp.sp==='gemini')res=await callGemini(key,url,model,msgs,sys,maxT,temp,sig);
-    else res=await callOpenAI(key,url,model,msgs,sys,maxT,temp,pp.ah(key),sig);
-    rmEl(lid);
-    const ela=((Date.now()-t0)/1e3).toFixed(1);
-    msgs.push({role:'assistant',content:res.content});
-    totalTok+=res.tokens||0;
-    G('tokInfo').textContent=totalTok.toLocaleString()+' tokens';
-    G('timeInfo').textContent=ela+'s';
-    setConn(true);autoSave();calcCost();
-    appendAI(res.content,res.meta+' · '+ela+'s',spd,md);
-    saveChatSess();
+    // 流式渲染：每次数据到达立即渲染，无节流
+    let streamIds=null,bbl=null,thinkEl=null,thinkHd=null,thinkLbl=null;
+    let fullText='',thinkText='',firstToken=true;
+
+    const onToken=(content,reasoning)=>{
+      // 首个token：初始化气泡
+      if(firstToken){
+        firstToken=false;
+        rmEl(lid);
+        streamIds=appendAIStream('...');
+        bbl=G(streamIds.bid);
+        thinkEl=G(streamIds.tid);
+        thinkHd=G('th'+streamIds.tid);
+        thinkLbl=G('tl'+streamIds.tid);
+      }
+      // 处理 reasoning
+      if(reasoning){
+        thinkText+=reasoning;
+        thinkEl.style.display='';
+        G('tb'+streamIds.tid).textContent=thinkText;
+        scrollBot();
+      }
+      // 处理正文
+      if(content){
+        // reasoning 结束时折叠思考框
+        if(thinkEl.style.display!=='none'&&thinkText&&!thinkHd.classList.contains('done')){
+          thinkHd.classList.add('done','open');
+          thinkLbl.textContent='已完成思考';
+          G('tb'+streamIds.tid).classList.add('open');
+          // 自动折叠思考框
+          thinkHd.classList.remove('open');
+          G('tb'+streamIds.tid).classList.remove('open');
+        }
+        fullText+=content;
+        bbl.innerHTML=marked.parse(fullText);
+        scrollBot();
+      }
+    };
+    const onMeta=res=>{
+      rmEl(lid);
+      if(!streamIds){streamIds=appendAIStream('...');bbl=G(streamIds.bid);}
+      const ela=((Date.now()-t0)/1e3).toFixed(1);
+      msgs.push({role:'assistant',content:res.content});
+      totalTok+=res.tokens||0;
+      G('tokInfo').textContent=totalTok.toLocaleString()+' tokens';
+      G('timeInfo').textContent=ela+'s';
+      const metaEl=G('m'+streamIds.bid);
+      if(metaEl)metaEl.textContent=res.meta+' · '+ela+'s';
+      setConn(true);autoSave();calcCost();
+      saveChatSess();
+      if(res.content)bbl.innerHTML=marked.parse(res.content);
+    };
+
+    if(pp.sp==='anthropic')await callAnthropicStream(key,url,model,msgs,sys,maxT,temp,sig,onToken,onMeta);
+    else if(pp.sp==='gemini')await callGeminiStream(key,url,model,msgs,sys,maxT,temp,sig,onToken,onMeta);
+    else await callOpenAIStream(key,url,model,msgs,sys,maxT,temp,pp.ah(key),sig,onToken,onMeta);
   }catch(e){
     rmEl(lid);
     if(e.name==='AbortError'){appendErr('已停止');if(msgs[msgs.length-1]?.role==='user')msgs.pop()}
@@ -1189,13 +1322,21 @@ function openLbox(src){G('lboxImg').src=src;G('lbox').classList.remove('hidden')
 function closeLbox(){G('lbox').classList.add('hidden')}
 
 function retryMsg(btn){
-  const text=btn.closest('.mbody').querySelector('.bbl').innerText.trim();
+  // 从 msgs 数组中找对应的用户消息（比 DOM innerText 更可靠）
+  const allMsgs=[...G('chat').querySelectorAll('.msg')];
+  const tm=btn.closest('.msg');
+  const idx=allMsgs.indexOf(tm);
+  // 计算这是第几条 user 消息（.msg.user 从0开始）
+  const userMsgsBefore=allMsgs.slice(0,idx+1).filter(m=>m.classList.contains('user')).length;
+  const userMsgsArr=msgs.filter(m=>m.role==='user');
+  const srcMsg=userMsgsArr[userMsgsBefore-1];
+  const text=srcMsg?.content||btn.closest('.mbody').querySelector('.bbl').innerText.trim();
   if(!text)return;
-  if(msgs.length>=2&&msgs[msgs.length-1].role==='assistant')msgs.pop();
-  if(msgs.length>=1&&msgs[msgs.length-1].role==='user')msgs.pop();
-  const all=[...G('chat').querySelectorAll('.msg')];
-  const tm=btn.closest('.msg');const idx=all.indexOf(tm);
-  for(let i=all.length-1;i>=idx;i--)all[i].remove();
+  // 裁剪 msgs 到该用户消息之前（不含）
+  const targetMsgIdx=msgs.indexOf(srcMsg);
+  if(targetMsgIdx>=0)msgs.splice(targetMsgIdx);
+  // 移除对应 DOM 消息
+  for(let i=allMsgs.length-1;i>=idx;i--)allMsgs[i].remove();
   sendMsg(text);
 }
 function retryErr(btn){btn.closest('.msg').remove();sendMsg(lastRetry)}
