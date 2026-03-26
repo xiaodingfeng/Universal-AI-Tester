@@ -422,88 +422,92 @@ input[type=checkbox]{accent-color:#007aff;width:14px;height:14px;cursor:pointer}
 <script>
 /* ═══════════════ DATA ═══════════════ */
 const PROVIDERS={
-  openai:     {n:'OpenAI',    ic:'🟢',url:'https://api.openai.com/v1',                             m:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo','o1','o1-mini','o3-mini'],                                           ah:k=>({Authorization:`Bearer ${k}`})},
-  claude:     {n:'Claude',   ic:'🟠',url:'https://api.anthropic.com/v1',                          m:['claude-opus-4-6','claude-sonnet-4-6','claude-haiku-4-5-20251001','claude-3-5-sonnet-20241022','claude-3-opus-20240229'],ah:k=>({'x-api-key':k,'anthropic-version':'2023-06-01'}),sp:'anthropic'},
-  gemini:     {n:'Gemini',   ic:'🔵',url:'https://generativelanguage.googleapis.com/v1beta',      m:['gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro','gemini-1.5-flash'],                                         ah:()=>({}),sp:'gemini'},
-  openrouter: {n:'OpenRouter',ic:'🔀',url:'https://openrouter.ai/api/v1',                         m:['openai/gpt-4o','anthropic/claude-3.5-sonnet','google/gemini-2.0-flash-exp:free','meta-llama/llama-3.3-70b-instruct','deepseek/deepseek-chat'],ah:k=>({Authorization:`Bearer ${k}`})},
-  deepseek:   {n:'DeepSeek', ic:'🌊',url:'https://api.deepseek.com/v1',                          m:['deepseek-chat','deepseek-reasoner'],                                                                                      ah:k=>({Authorization:`Bearer ${k}`})},
-  sflow:      {n:'硅基流动',  ic:'💎',url:'https://api.siliconflow.cn/v1',                        m:['Qwen/Qwen2.5-72B-Instruct','deepseek-ai/DeepSeek-V3','deepseek-ai/DeepSeek-R1','meta-llama/Meta-Llama-3.1-70B-Instruct'],ah:k=>({Authorization:`Bearer ${k}`})},
-  doubao:     {n:'豆包',     ic:'🎵',url:'https://ark.cn-beijing.volces.com/api/v3',              m:['doubao-pro-32k','doubao-lite-32k','Doubao-1.5-pro-32k'],                                                               ah:k=>({Authorization:`Bearer ${k}`})},
-  groq:       {n:'Groq',     ic:'⚡',url:'https://api.groq.com/openai/v1',                        m:['llama-3.3-70b-versatile','llama-3.1-8b-instant','mixtral-8x7b-32768'],                                                   ah:k=>({Authorization:`Bearer ${k}`})},
-  mistral:    {n:'Mistral',  ic:'🌪',url:'https://api.mistral.ai/v1',                             m:['mistral-large-latest','mistral-medium-latest','codestral-latest'],                                                        ah:k=>({Authorization:`Bearer ${k}`})},
-  xai:        {n:'xAI',     ic:'✖',url:'https://api.x.ai/v1',                                    m:['grok-3','grok-3-mini','grok-2'],                                                                                          ah:k=>({Authorization:`Bearer ${k}`})},
-  zhipu:      {n:'智谱',     ic:'🇨🇳',url:'https://open.bigmodel.cn/api/paas/v4',                m:['glm-4-plus','glm-4-air','glm-4-flash'],                                                                                   ah:k=>({Authorization:`Bearer ${k}`})},
-  qianwen:    {n:'千问',     ic:'🌸',url:'https://dashscope.aliyuncs.com/compatible-mode/v1',     m:['qwen-max','qwen-plus','qwen-turbo','qwq-plus'],                                                                           ah:k=>({Authorization:`Bearer ${k}`})},
-  custom:     {n:'自定义',   ic:'⚙',url:'',m:[],                                                  ah:k=>({Authorization:`Bearer ${k}`})},
+  openai:     {n:'OpenAI',    ic:'🟢',url:'https://api.openai.com/v1',                                   m:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo','o1','o1-mini','o3-mini','o4-mini'],                                                          ah:k=>({Authorization:`Bearer ${k}`})},
+  claude:     {n:'Claude',    ic:'🟠',url:'https://api.anthropic.com/v1',                                m:['claude-opus-4-6','claude-sonnet-4-6','claude-haiku-4-5-20251001','claude-3-5-sonnet-20241022','claude-3-7-sonnet-20250219'],                         ah:k=>({'x-api-key':k,'anthropic-version':'2023-06-01'}),sp:'anthropic'},
+  gemini:     {n:'Gemini',    ic:'🔵',url:'https://generativelanguage.googleapis.com/v1beta',            m:['gemini-2.5-pro-preview-05-06','gemini-2.0-flash','gemini-2.0-flash-lite','gemini-1.5-pro','gemini-1.5-flash'],                                       ah:()=>({}),sp:'gemini'},
+  openrouter: {n:'OpenRouter',ic:'🔀',url:'https://openrouter.ai/api/v1',                               m:['openai/gpt-4o','anthropic/claude-opus-4','google/gemini-2.5-pro','meta-llama/llama-4-maverick','deepseek/deepseek-r2','microsoft/mai-ds-r1:free'],     ah:k=>({Authorization:`Bearer ${k}`})},
+  deepseek:   {n:'DeepSeek',  ic:'🌊',url:'https://api.deepseek.com/v1',                                m:['deepseek-chat','deepseek-reasoner'],                                                                                                                   ah:k=>({Authorization:`Bearer ${k}`})},
+  sflow:      {n:'硅基流动',  ic:'💎',url:'https://api.siliconflow.cn/v1',                              m:['Qwen/Qwen3-235B-A22B','Qwen/Qwen2.5-72B-Instruct','deepseek-ai/DeepSeek-V3','deepseek-ai/DeepSeek-R1','Pro/deepseek-ai/DeepSeek-R1'],                 ah:k=>({Authorization:`Bearer ${k}`})},
+  doubao:     {n:'豆包',      ic:'🎵',url:'https://ark.cn-beijing.volces.com/api/v3',                   m:['doubao-pro-32k','doubao-lite-32k','Doubao-1.5-pro-32k','deepseek-r1-250528'],                                                                         ah:k=>({Authorization:`Bearer ${k}`})},
+  groq:       {n:'Groq',      ic:'⚡',url:'https://api.groq.com/openai/v1',                             m:['llama-3.3-70b-versatile','llama-3.1-8b-instant','meta-llama/llama-4-scout-17b-16e-instruct','compound-beta'],                                         ah:k=>({Authorization:`Bearer ${k}`})},
+  mistral:    {n:'Mistral',   ic:'🌪',url:'https://api.mistral.ai/v1',                                  m:['mistral-large-latest','mistral-small-latest','codestral-latest','magistral-medium-2506'],                                                              ah:k=>({Authorization:`Bearer ${k}`})},
+  xai:        {n:'xAI',       ic:'✖', url:'https://api.x.ai/v1',                                        m:['grok-3','grok-3-mini','grok-3-fast','grok-2-vision-1212'],                                                                                            ah:k=>({Authorization:`Bearer ${k}`})},
+  zhipu:      {n:'智谱',      ic:'🇨🇳',url:'https://open.bigmodel.cn/api/paas/v4',                     m:['glm-4-plus','glm-4-air','glm-z1-flash','glm-4-long'],                                                                                                  ah:k=>({Authorization:`Bearer ${k}`})},
+  qianwen:    {n:'千问',      ic:'🌸',url:'https://dashscope.aliyuncs.com/compatible-mode/v1',          m:['qwen-max','qwen-plus','qwen-turbo','qwq-plus','qwen3-235b-a22b'],                                                                                      ah:k=>({Authorization:`Bearer ${k}`})},
+  moonshot:   {n:'月之暗面',  ic:'🌙',url:'https://api.moonshot.cn/v1',                                 m:['moonshot-v1-8k','moonshot-v1-32k','moonshot-v1-128k'],                                                                                                ah:k=>({Authorization:`Bearer ${k}`})},
+  minimax:    {n:'MiniMax',   ic:'🟣',url:'https://api.minimax.chat/v1',                                m:['MiniMax-Text-01','abab6.5s-chat','abab5.5-chat'],                                                                                                      ah:k=>({Authorization:`Bearer ${k}`})},
+  baichuan:   {n:'百川',      ic:'🏔',url:'https://api.baichuan-ai.com/v1',                             m:['Baichuan4-Turbo','Baichuan4-Air','Baichuan3-Turbo'],                                                                                                   ah:k=>({Authorization:`Bearer ${k}`})},
+  hunyuan:    {n:'混元',      ic:'☁️',url:'https://api.hunyuan.cloud.tencent.com/v1',                  m:['hunyuan-pro','hunyuan-standard','hunyuan-lite','hunyuan-turbos-latest'],                                                                                ah:k=>({Authorization:`Bearer ${k}`})},
+  stepfun:    {n:'阶跃星辰',  ic:'🪐',url:'https://api.stepfun.com/v1',                                 m:['step-2-16k','step-1-8k','step-1-32k','step-2-mini'],                                                                                                   ah:k=>({Authorization:`Bearer ${k}`})},
+  yi:         {n:'零一万物',  ic:'⭕',url:'https://api.lingyiwanwu.com/v1',                             m:['yi-large','yi-medium','yi-large-turbo','yi-large-rag'],                                                                                                ah:k=>({Authorization:`Bearer ${k}`})},
+  perplexity: {n:'Perplexity',ic:'🔍',url:'https://api.perplexity.ai',                                  m:['sonar-pro','sonar','sonar-reasoning-pro','sonar-reasoning'],                                                                                           ah:k=>({Authorization:`Bearer ${k}`})},
+  cohere:     {n:'Cohere',    ic:'🔶',url:'https://api.cohere.com/compatibility/v1',                    m:['command-r-plus','command-r','command-a-03-2025'],                                                                                                      ah:k=>({Authorization:`Bearer ${k}`})},
+  together:   {n:'Together',  ic:'🤝',url:'https://api.together.xyz/v1',                                m:['meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8','deepseek-ai/DeepSeek-R1','Qwen/Qwen2.5-72B-Instruct-Turbo'],                                       ah:k=>({Authorization:`Bearer ${k}`})},
+  fireworks:  {n:'Fireworks', ic:'🎆',url:'https://api.fireworks.ai/inference/v1',                      m:['accounts/fireworks/models/llama-v3p3-70b-instruct','accounts/fireworks/models/deepseek-r1','accounts/fireworks/models/qwen2p5-72b-instruct'],           ah:k=>({Authorization:`Bearer ${k}`})},
+  custom:     {n:'自定义',    ic:'⚙', url:'',m:[],                                                      ah:k=>({Authorization:`Bearer ${k}`})},
 };
-
 const IMG_PROVS={
-  openai:     {n:'OpenAI',    ic:'🟢',url:'https://api.openai.com/v1',                            m:['dall-e-3','dall-e-2'],                                                                                                    note:'POST /images/generations',fmt:'openai'},
-  openrouter: {n:'OpenRouter',ic:'🔀',url:'https://openrouter.ai/api/v1',                         m:['bytedance-seed/seedream-4.5','bytedance-seed/seedream-4.5:free','google/gemini-2.0-flash-exp:free'],                     note:'POST /chat/completions + modalities:["image"]',fmt:'chat_img'},
-  sflow:      {n:'硅基流动',  ic:'💎',url:'https://api.siliconflow.cn/v1',                        m:['black-forest-labs/FLUX.1-schnell','black-forest-labs/FLUX.1-dev','Pro/black-forest-labs/FLUX.1-schnell','stabilityai/stable-diffusion-3-5-large','Kwai-Kolors/Kolors'],note:'POST /images/generations',fmt:'openai'},
-  zhipu:      {n:'智谱',     ic:'🇨🇳',url:'https://open.bigmodel.cn/api/paas/v4',                m:['cogview-3-plus','cogview-3','cogview-4'],                                                                                 note:'POST /images/generations',fmt:'openai'},
-  qianwen:    {n:'千问',     ic:'🌸',url:'https://dashscope.aliyuncs.com/compatible-mode/v1',     m:['wanx2.1-t2i-turbo','wanx2.1-t2i-plus','wanx-v1'],                                                                       note:'POST /images/generations',fmt:'openai'},
-  doubao:     {n:'豆包',     ic:'🎵',url:'https://ark.cn-beijing.volces.com/api/v3',              m:['doubao-seedream-3-0-t2i-250415'],                                                                                         note:'POST /images/generations',fmt:'openai'},
-  together:   {n:'Together', ic:'🤝',url:'https://api.together.xyz/v1',                           m:['black-forest-labs/FLUX.1-schnell-Free','black-forest-labs/FLUX.1.1-pro','stabilityai/stable-diffusion-xl-base-1.0'],     note:'POST /images/generations',fmt:'openai'},
-  fireworks:  {n:'Fireworks',ic:'🎆',url:'https://api.fireworks.ai/inference/v1',                 m:['accounts/fireworks/models/flux-1-dev-fp8','accounts/fireworks/models/playground-v2-5-1024px-aesthetic'],                 note:'POST /image_generation',fmt:'fireworks'},
-  stability:  {n:'Stability',ic:'🔷',url:'https://api.stability.ai/v2beta',                       m:['stable-image/generate/ultra','stable-image/generate/core','stable-image/generate/sd3'],                                  note:'POST /v2beta/{model}',fmt:'stability'},
-  replicate:  {n:'Replicate',ic:'🔁',url:'https://api.replicate.com/v1',                          m:['black-forest-labs/flux-1.1-pro','black-forest-labs/flux-schnell','stability-ai/sdxl','recraft-ai/recraft-v3'],            note:'POST /v1/models/{owner}/{name}/predictions',fmt:'replicate'},
-  fal:        {n:'fal.ai',   ic:'⚡',url:'https://queue.fal.run',                                 m:['fal-ai/flux/schnell','fal-ai/flux/dev','fal-ai/flux-pro','fal-ai/ideogram/v2','fal-ai/recraft-v3'],                       note:'POST https://queue.fal.run/{model}',fmt:'fal'},
-  custom:     {n:'自定义',   ic:'⚙',url:'',m:[],                                                  note:'自定义 OpenAI 兼容接口',fmt:'openai'},
+  openai:     {n:'OpenAI',    ic:'🟢',url:'https://api.openai.com/v1',                            m:['gpt-image-1','dall-e-3','dall-e-2'],                                                                                                                          note:'POST /images/generations',fmt:'openai'},
+  openrouter: {n:'OpenRouter',ic:'🔀',url:'https://openrouter.ai/api/v1',                         m:['bytedance-seed/seedream-4.5','bytedance-seed/seedream-4.5:free','google/gemini-2.0-flash-exp:free'],                                                         note:'POST /chat/completions + modalities:["image"]',fmt:'chat_img'},
+  sflow:      {n:'硅基流动',  ic:'💎',url:'https://api.siliconflow.cn/v1',                        m:['black-forest-labs/FLUX.1-schnell','black-forest-labs/FLUX.1-dev','Pro/black-forest-labs/FLUX.1-schnell','stabilityai/stable-diffusion-3-5-large','Kwai-Kolors/Kolors','stabilityai/stable-diffusion-3-medium'],note:'POST /images/generations',fmt:'openai'},
+  zhipu:      {n:'智谱',      ic:'🇨🇳',url:'https://open.bigmodel.cn/api/paas/v4',               m:['cogview-4-250304','cogview-3-plus','cogview-3'],                                                                                                               note:'POST /images/generations',fmt:'openai'},
+  qianwen:    {n:'千问',      ic:'🌸',url:'https://dashscope.aliyuncs.com/compatible-mode/v1',    m:['wanx2.1-t2i-turbo','wanx2.1-t2i-plus','wanx-v1','wanx2.5-t2i-turbo'],                                                                                       note:'POST /images/generations',fmt:'openai'},
+  doubao:     {n:'豆包',      ic:'🎵',url:'https://ark.cn-beijing.volces.com/api/v3',             m:['doubao-seedream-3-0-t2i-250415','doubao-t2i-xl-20250424'],                                                                                                    note:'POST /images/generations',fmt:'openai'},
+  hunyuan:    {n:'混元',      ic:'☁️',url:'https://api.hunyuan.cloud.tencent.com/v1',            m:['hunyuan-image','hunyuan-image-turbo'],                                                                                                                         note:'POST /images/generations',fmt:'openai'},
+  stepfun:    {n:'阶跃星辰',  ic:'🪐',url:'https://api.stepfun.com/v1',                           m:['step-1x-medium','step-1x-turbo'],                                                                                                                             note:'POST /images/generations',fmt:'openai'},
+  together:   {n:'Together',  ic:'🤝',url:'https://api.together.xyz/v1',                          m:['black-forest-labs/FLUX.1-schnell-Free','black-forest-labs/FLUX.1.1-pro','stabilityai/stable-diffusion-xl-base-1.0','black-forest-labs/FLUX.1-depth'],         note:'POST /images/generations',fmt:'openai'},
+  fireworks:  {n:'Fireworks', ic:'🎆',url:'https://api.fireworks.ai/inference/v1',                m:['accounts/fireworks/models/flux-1-dev-fp8','accounts/fireworks/models/flux-1-schnell','accounts/fireworks/models/playground-v2-5-1024px-aesthetic'],           note:'POST /image_generation',fmt:'fireworks'},
+  stability:  {n:'Stability', ic:'🔷',url:'https://api.stability.ai/v2beta',                      m:['stable-image/generate/ultra','stable-image/generate/core','stable-image/generate/sd3','stable-image/generate/sd3-turbo'],                                     note:'POST /v2beta/{model}',fmt:'stability'},
+  replicate:  {n:'Replicate', ic:'🔁',url:'https://api.replicate.com/v1',                         m:['black-forest-labs/flux-1.1-pro','black-forest-labs/flux-schnell','recraft-ai/recraft-v3','ideogram-ai/ideogram-v2'],                                          note:'POST /v1/models/{owner}/{name}/predictions',fmt:'replicate'},
+  fal:        {n:'fal.ai',    ic:'⚡',url:'https://queue.fal.run',                                m:['fal-ai/flux/schnell','fal-ai/flux/dev','fal-ai/flux-pro/v1.1','fal-ai/ideogram/v3','fal-ai/recraft-v3','fal-ai/imagen4/preview','fal-ai/stable-diffusion-v35-large'],note:'POST https://queue.fal.run/{model}',fmt:'fal'},
+  custom:     {n:'自定义',    ic:'⚙', url:'',m:[],                                                note:'自定义 OpenAI 兼容接口',fmt:'openai'},
 };
-
 const VID_PROVS={
-  // OpenAI Sora: POST /v1/videos/generations (内测), poll /v1/videos/generations/{id}
   openai:    {n:'OpenAI Sora',ic:'🟢',url:'https://api.openai.com/v1',
               m:['sora-1.5','sora-turbo'],
               note:'POST /videos/generations → 轮询 /videos/generations/{id}',fmt:'openai_vid'},
-
-  // 硅基流动: POST /v1/video/submit, GET /v1/video/status/{requestId}
   sflow:     {n:'硅基流动',   ic:'💎',url:'https://api.siliconflow.cn/v1',
-              m:['Wan-AI/Wan2.2-T2V-14B','Wan-AI/Wan2.2-I2V-A14B','Wan-AI/Wan2.1-T2V-14B','Wan-AI/Wan2.1-T2V-1.3B',
-                 'Pro/Wan-AI/Wan2.1-T2V','CogVideoX-5b','Lightricks/LTX-Video'],
-              note:'POST /video/submit {model,prompt,image_size:"1280x720"} → GET /video/status/{requestId}',fmt:'sflow_vid'},
-
-  // 抖音即梦(火山引擎): POST /v3/videos/generations → 轮询 /v3/videos/generations/{id}
+              m:['Wan-AI/Wan2.2-T2V-14B','Wan-AI/Wan2.2-I2V-A14B','Wan-AI/Wan2.1-T2V-14B','Wan-AI/Wan2.1-T2V-1.3B','Pro/Wan-AI/Wan2.1-T2V','CogVideoX-5b','Lightricks/LTX-Video'],
+              note:'POST /video/submit → GET /video/status/{requestId}',fmt:'sflow_vid'},
   doubao:    {n:'抖音即梦',   ic:'🎵',url:'https://ark.cn-beijing.volces.com/api/v3',
-              m:['doubao-seedance-1-lite','doubao-video-lite-v1','doubao-video-pro-v1'],
+              m:['doubao-seedance-1-0-t2v-250528','doubao-seedance-1-lite','doubao-video-pro-v1'],
               note:'POST /videos/generations → 轮询 /videos/generations/{id}',fmt:'openai_vid'},
-
-  // Kling: POST /v1/videos/text2video → 轮询 /v1/videos/text2video/{taskId}
   kling:     {n:'Kling AI',   ic:'🎬',url:'https://api.klingai.com/v1',
               m:['kling-v2-master','kling-v1-6','kling-v1-5','kling-v1'],
               note:'POST /videos/text2video → 轮询 /videos/text2video/{taskId}',fmt:'kling'},
-
-  // MiniMax: POST /v1/video_generation → GET /v1/query/video_generation?task_id=
   minimax:   {n:'MiniMax',    ic:'🟣',url:'https://api.minimax.chat/v1',
-              m:['video-01','video-01-live2'],
+              m:['video-01','video-01-live2','video-01-director'],
               note:'POST /video_generation → GET /query/video_generation?task_id=',fmt:'minimax'},
-
-  // Runway Gen4: POST /v1/text_to_video 或 /v1/image_to_video → GET /v1/tasks/{id}
   runway:    {n:'Runway Gen4',ic:'✈️',url:'https://api.runwayml.com/v1',
               m:['gen4_turbo','gen3a_turbo'],
-              note:'POST /text_to_video → GET /tasks/{id}（需 X-Runway-Version header）',fmt:'runway'},
-
-  // 智谱 CogVideoX: POST /v4/videos/generations → 轮询 /v4/videos/generations/{id}
+              note:'POST /text_to_video → GET /tasks/{id}',fmt:'runway'},
+  hunyuan:   {n:'混元视频',   ic:'☁️',url:'https://api.hunyuan.cloud.tencent.com/v1',
+              m:['hunyuan-video','hunyuan-video-i2v'],
+              note:'POST /video_generations → 轮询 /video_generations/{id}',fmt:'openai_vid'},
+  stepfun:   {n:'阶跃视频',   ic:'🪐',url:'https://api.stepfun.com/v1',
+              m:['step-video-t2v','step-video-t2v-turbo'],
+              note:'POST /video_generations → 轮询 /video_generations/{id}',fmt:'openai_vid'},
   zhipu:     {n:'智谱',       ic:'🇨🇳',url:'https://open.bigmodel.cn/api/paas/v4',
-              m:['cogvideox-5b','cogvideox-flash'],
+              m:['cogvideox-5b','cogvideox-flash','cogvideox2.0'],
               note:'POST /videos/generations → 轮询 /videos/generations/{id}',fmt:'openai_vid'},
-
-  // Replicate: POST /v1/models/{owner}/{name}/predictions → 轮询 predictions/{id}
+  luma:      {n:'Luma Dream', ic:'🌠',url:'https://api.lumalabs.ai/dream-machine/v1',
+              m:['ray-2','ray-flash-2','ray-1-6'],
+              note:'POST /generations → 轮询 /generations/{id}',fmt:'luma_vid'},
+  pika:      {n:'Pika',       ic:'⚡',url:'https://api.pika.art/v2',
+              m:['pika-2.2','pika-2.1','pika-1.5'],
+              note:'POST /generate/text-to-video → 轮询 /tasks/{taskId}',fmt:'pika_vid'},
+  vidu:      {n:'Vidu',       ic:'🎥',url:'https://api.vidu.cn/ent/v2',
+              m:['vidu2.0','vidu1.5','vidu-q1'],
+              note:'POST /text2video → 轮询 /tasks/{id}/creations',fmt:'vidu_vid'},
   replicate: {n:'Replicate',  ic:'🔁',url:'https://api.replicate.com/v1',
-              m:['minimax/video-01','wan-ai/wan-2.1-t2v-turbo','tencent/hunyuan-video'],
+              m:['minimax/video-01','wan-ai/wan-2.1-t2v-turbo','tencent/hunyuan-video','luma/ray-flash-2'],
               note:'POST /v1/models/{owner}/{name}/predictions → 轮询',fmt:'replicate_vid'},
-
-  // fal.ai: POST https://queue.fal.run/{model} → GET /requests/{id}
   fal:       {n:'fal.ai',     ic:'⚡',url:'https://queue.fal.run',
-              m:['fal-ai/wan-t2v','fal-ai/kling-video/v2/master/text-to-video',
-                 'fal-ai/hunyuan-video','fal-ai/cogvideox-5b'],
+              m:['fal-ai/wan-t2v','fal-ai/kling-video/v2/master/text-to-video','fal-ai/hunyuan-video','fal-ai/luma-dream-machine','fal-ai/minimax-video-01'],
               note:'POST https://queue.fal.run/{model} → GET requests/{id}',fmt:'fal_vid'},
-
   custom:    {n:'自定义',     ic:'⚙', url:'',m:[],
               note:'自定义 OpenAI 兼容接口',fmt:'openai_vid'},
 };
-
 const TMPLS=[
   {n:'代码审查',ic:'👨‍💻',t:'请帮我审查以下代码，指出潜在的 bug、性能问题和改进建议：\n\n```\n[粘贴代码]\n```'},
   {n:'文章摘要',ic:'📄',t:'请将以下文章概括为 3-5 个要点，并给出一句话总结：\n\n[粘贴文章]'},
@@ -1205,6 +1209,35 @@ async function genVideo(){
           if(sd.status==='FAILED')throw new Error(sd.error||'fal.ai 生成失败');
         }
       }else{vidUrl=d.video?.url||d.video_url}
+    }else if(fmt==='luma_vid'){
+      // Luma Dream Machine: POST /generations → GET /generations/{id}
+      const body={prompt,model,loop:false,...extra};if(ref)body.keyframes={frame0:{type:'image',url:ref}};if(dur)body.duration=String(dur);
+      const r=await fetch(`${baseUrl}/generations`,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();if(!r.ok)throw new Error(d.detail||d.message||JSON.stringify(d));
+      const genId=d.id;if(!genId)throw new Error('Luma 未返回生成 ID');
+      let att=0;while(att<72){await sleep(5000);att++;updVidSt(lid,`Luma 生成中… (${att*5}s)`,(att/72)*100);const pr=await fetch(`${baseUrl}/generations/${genId}`,{headers:{Authorization:`Bearer ${key}`}});const pd=await pr.json();const st=pd.state;if(st==='completed'){vidUrl=pd.assets?.video;break}if(st==='failed')throw new Error(pd.failure_reason||'Luma 生成失败')}
+    }else if(fmt==='pika_vid'){
+      // Pika: POST /generate/text-to-video → GET /tasks/{taskId}
+      const endpoint=ref?`${baseUrl}/generate/image-to-video`:`${baseUrl}/generate/text-to-video`;
+      const body={promptText:prompt,model:model||'pika-2.1',options:{duration:dur,...extra}};if(ref)body.image=ref;if(resolution){const[w,h]=(resMap[resolution]||resolution||'1280x720').split('x');body.options.resolution=`${w}x${h}`;}
+      const r=await fetch(endpoint,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();if(!r.ok)throw new Error(d.error?.message||d.message||JSON.stringify(d));
+      const taskId=d.data?.id||d.task_id||d.id;if(!taskId)throw new Error('Pika 未返回任务 ID');
+      let att=0;while(att<72){await sleep(5000);att++;updVidSt(lid,`Pika 生成中… (${att*5}s)`,(att/72)*100);const pr=await fetch(`${baseUrl}/tasks/${taskId}`,{headers:{Authorization:`Bearer ${key}`}});const pd=await pr.json();const st=pd.data?.status||pd.status;if(st==='finished'||st==='succeeded'||st==='completed'){vidUrl=pd.data?.result_url||pd.data?.video?.url||pd.video_url;break}if(st==='failed'||st==='error')throw new Error(pd.data?.error||'Pika 生成失败')}
+    }else if(fmt==='vidu_vid'){
+      // Vidu: POST /tasks → GET /tasks/{id}
+      const body={type:'t2v',model:model||'vidu-2.0',input:{prompts:[{type:'text',content:prompt}]},settings:{duration:dur,...extra}};if(ref)body.input.prompts.push({type:'image',content:ref});
+      const r=await fetch(`${baseUrl}/tasks`,{method:'POST',headers:{Authorization:`Token ${key}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();if(!r.ok)throw new Error(d.message||JSON.stringify(d));
+      const taskId=d.id;if(!taskId)throw new Error('Vidu 未返回任务 ID');
+      let att=0;while(att<72){await sleep(5000);att++;updVidSt(lid,`Vidu 生成中… (${att*5}s)`,(att/72)*100);const pr=await fetch(`${baseUrl}/tasks/${taskId}`,{headers:{Authorization:`Token ${key}`}});const pd=await pr.json();const st=pd.state;if(st==='success'){vidUrl=pd.creations?.[0]?.url;break}if(st==='failed')throw new Error(pd.err_code||'Vidu 生成失败')}
+    }else if(fmt==='pixverse_vid'){
+      // PixVerse: POST /video/text2video → GET /video/result/{id}
+      const body={prompt,model:model||'pixverse-v4',duration:dur,...extra};if(ref)body.img_url=ref;if(resolution)body.resolution=resMap[resolution]||resolution;
+      const r=await fetch(`${baseUrl}/video/text2video`,{method:'POST',headers:{Authorization:`Bearer ${key}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      const d=await r.json();if(!r.ok)throw new Error(d.ErrMsg||d.message||JSON.stringify(d));
+      const videoId=d.Resp?.video_id||d.video_id;if(!videoId)throw new Error('PixVerse 未返回 video_id');
+      let att=0;while(att<72){await sleep(5000);att++;updVidSt(lid,`PixVerse 生成中… (${att*5}s)`,(att/72)*100);const pr=await fetch(`${baseUrl}/video/result/${videoId}`,{headers:{Authorization:`Bearer ${key}`}});const pd=await pr.json();const st=pd.Resp?.status;if(st===2){vidUrl=pd.Resp?.url;break}if(st===3)throw new Error(pd.Resp?.err_msg||'PixVerse 生成失败')}
     }else{
       // openai_vid 默认分支: POST /videos/generations → 轮询 /videos/generations/{id}
       const body={model,prompt,duration:dur,...extra};if(fps)body.fps=parseInt(fps);if(ref)body.image=ref;if(cam)body.camera_movement=cam;
